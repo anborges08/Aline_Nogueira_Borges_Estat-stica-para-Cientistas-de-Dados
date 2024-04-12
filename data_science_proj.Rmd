@@ -1,0 +1,161 @@
+---
+title: "Estatística - Dengue"
+author: "Aline"
+date: "2024-04-12"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 2.	Escolha uma base de dados para realizar esse projeto. Essa base de dados será utilizada durante toda sua análise. Essa base necessita ter 4 (ou mais) variáveis de interesse, onde todas são numéricas (confira com o professor a possibilidade de utilização de dados categóricos). Observe que é importante que haja dados faltantes em pelo menos uma variável para executar esse projeto. Caso você tenha dificuldade para escolher uma base, o professor da disciplina irá designar para você. Explique qual o motivo para a escolha dessa base e aponte os resultados esperados através da análise.
+
+Para esse projeto, usei a base de dados de Dengue de um bairro do Rio de Janeiro. Hoje em dia, a Dengue é um problema de saúde pública, e é notório que condições climáticas, como temperatura e precipitação, podem afetar a quantidade de casos em um mês. Espero ter um entendimento baseado em dados sobre o funcionamento da dinâmica do casos de dengue sendo influenciado por fatores climáticos. 
+
+```{r reading data}
+dados_dengue <- read.csv('dengue_casos_freguesia_raw.csv')
+```
+
+## 3.	Utilizando o pacote summarytools (função descr), descreva estatisticamente a sua base de dados.
+
+Alguns insights interessantes:
+1. A média de aproximadamente 14.18 casos de dengue indica que, em média, há uma presença significativa da doença em Freguesia/RJ. No entanto, o desvio padrão alto de aproximadamente 31.08 indica uma grande variabilidade nos casos de dengue, o que parece indicar picos de incidência em determinados períodos (que geralmente ocorre no período do Verão).
+
+2. Além disso, a assimetria positiva (3.72) e a mediana (3.0) menor que a média indica uma distribuição inclinada para a direita, com a presença de valores bem altos (201) que puxam a média para cima.
+
+3. A distribuição da temperatura parece ser relativamente normal, com uma assimetria próxima de zero e uma curtose próxima de -1,04, sugerindo uma distribuição mais achatada do que a distribuição normal padrão.
+
+4. Além disso, a temperatura está dentro da faixa que é considerada propícia para a proliferaçãoo do Aedes Aegypt, com fatores sazonais que podem aumentar a incidência de casos de dengue, se combinados com períodos de altas chuvas (como ocorre no Verão).
+
+```{r describe}
+library(summarytools)
+descr(dados_dengue)
+``` 
+## 4.	Crie um gráfico com a matriz de espalhamento (scatter matrix plot) para sua base de dados. Através de investigação visual, quais são as variáveis mais correlacionadas. Apresente o gráfico e justifique.
+
+Visualmente, a temperatura e a umidade do ar parecem ser as variáveis mais correlacionadas. Existe uma certa tendência aparente entre essas duas variáveis onde, com o aumento da temperatura, a umidade tende a cair. Por conta da grande incidência de casos com poucos valores de dengue (<10 casos), a variável 'casos_dengue' não parece ter uma relação linear tão forte com todas as outras variáveis climáticas no mesmo período observado. 
+
+```{r pairs}
+pairs(dados_dengue[,c("casos_dengue", "precipitacao", "temperatura",  "umidade_ar")])
+``` 
+
+## 5.	Sobre a normalidade das variáveis:
+
+## a.	Descreva o que é uma distribuição normal;
+
+A distribuição normal é um tipo de distribuição de probabilidade contínua que é caracterizada por sua forma de sino simétrica em torno de uma média central. A forma da distribuição é definida por dois parâmetros: média e desvio padrão da variável aleatória que está sendo medida.
+
+Este tipo de distribuição possui algumas características importantes, como possuir a média, mediana e moda iguais, Além da simetria em relação à média. 
+
+A distribuição normal é amplamente utilizada em estatística devido às suas propriedades matemáticas bem definidas e sua frequente ocorrência em fenômenos naturais e processos aleatórios. Muitos métodos estatísticos e técnicas de inferência são baseados na suposição de que os dados seguem uma distribuição normal. 
+
+## b.	Crie um histograma para cada variável da sua base de dados. Justifique a escolha do número de bins para seu trabalho. (usando o pacote ggplot);
+
+Nesse item, escolhi a quantidade de bins que seja capaz de observar a variabilidade das variáveis de forma iterativa. Comecei com um valor de acordo com uma heurística (Regra de Freedman-Diaconis), e fui alterando para melhorar a visualização das distribuições. 
+
+
+```{r histogram}
+library(ggplot2)
+
+iqr <- IQR(dados_dengue$casos_dengue)
+nbins <- ceiling((max(dados_dengue$casos_dengue) - min(dados_dengue$casos_dengue)) / (2 * iqr / length(dados_dengue$casos_dengue)^(1/3)))
+
+ggplot(dados_dengue, aes(x = casos_dengue)) +
+  geom_histogram(fill = "skyblue", color = "black", bins = nbins) +
+  labs(title = "Histograma de casos de dengue", x = "Valores", y = "Frequ?ncia")
+
+ggplot(dados_dengue, aes(x = temperatura)) +
+  geom_histogram(fill = "skyblue", color = "black", bins = 10) +
+  labs(title = "Histograma de temperatura", x = "Valores", y = "Frequ?ncia")
+
+ggplot(dados_dengue, aes(x = precipitacao)) +
+  geom_histogram(fill = "skyblue", color = "black", bins = 30) +
+  labs(title = "Histograma de precipitacao", x = "Valores", y = "Frequ?ncia")
+
+ggplot(dados_dengue, aes(x = umidade_ar)) +
+  geom_histogram(fill = "skyblue", color = "black", bins = 20) +
+  labs(title = "Histograma de umidade do ar", x = "Valores", y = "Frequ?ncia")
+
+``` 
+## c.	Crie um gráfico Q-Q para cada variável de sua base de dados. (use as funções presentes no pacote ggpubr);
+
+```{r qqplot}
+library(ggpubr)
+ggqqplot(dados_dengue$casos_dengue)
+ggqqplot(dados_dengue$temperatura)
+ggqqplot(dados_dengue$precipitacao)
+ggqqplot(dados_dengue$umidade_ar)
+``` 
+```{r qqplot temp}
+ggqqplot(dados_dengue$temperatura)
+``` 
+
+```{r qqplot prec}
+ggqqplot(dados_dengue$precipitacao)
+``` 
+
+```{r qqplot umid}
+ggqqplot(dados_dengue$umidade_ar)
+``` 
+
+## d.	Execute um teste de normalidade Shapiro-Wilk;
+
+```{r shapiro}
+resultado_casos_dengue <- shapiro.test(dados_dengue$casos_dengue)
+print(resultado_casos_dengue$p.value)
+resultado_temperatura <- shapiro.test(dados_dengue$temperatura)
+print(resultado_temperatura$p.value)
+resultado_precipitacao <- shapiro.test(dados_dengue$precipitacao)
+print(resultado_precipitacao$p.value)
+resultado_umidade_ar <- shapiro.test(dados_dengue$umidade_ar)
+print(resultado_umidade_ar$p.value)
+``` 
+## e.	Baseado nos itens anteriores, é possível afirmar que algumas das variáveis se aproximam de uma distribuição normal? Justifique.
+
+Observando os gráficos e teste de Shapiro-Wilk realizado, é possível observar que nenhuma variável se aproxima de uma distribuição normal. Visualmente, apenas a temperatura seria uma boa candidata à distribuição normal, visto que casos de dengue e precipitação possuem um comportamento de cauda longa, com grande concentração em valores menores. Essas constatações são validadas com o teste de Shapiro-Wilk, onde para todas as variáveis o p-valor foi abaixo de 0.05, indicando a rejeição da hipótese nula de normalidade.
+
+## 6.	Qualidade de dados tem sido um dos temas mais abordados nos projetos de estruturação em data analytics, sendo um dos principais indicadores do nível de maturidade das organizações. Um dos problemas mais comuns de qualidade é relacionado à completude de dados. Em suas palavras, como é definido completude? Qual o impacto em uma análise exploratória de dados?
+
+Completude de dados é uma medida que indica a proporção de valores presentes em um conjunto de dados em comparação com o total esperado. Quando os dados estão incompletos, ou seja, quando há valores ausentes, isso pode impactar significativamente uma análise exploratória de dados. 
+
+Por exemplo, se uma variável importante para a análise tem muitos valores ausentes, isso pode distorcer a percepção dos padrões e relações nos dados. Além disso, a falta de completude pode levar a conclusões errôneas ou tendenciosas, especialmente se os dados ausentes não estiverem distribuídos aleatoriamente, podendo afetar medidas como média e desvio padrão.
+
+A falta de completude pode ter um impacto significativo na análise exploratória de dados. Quando os dados estão incompletos, isso pode levar a uma interpretação distorcida dos padrões e relações nos dados, pois os valores ausentes podem introduzir viés nos resultados. Além disso, a incompletude pode resultar na perda de informações valiosas, o que pode afetar a precisão das estimativas estatísticas, como médias, desvios padrão e correlações.
+
+## 7.	Qual a completude para cada uma das variáveis do seu banco de dados?
+
+```{r completude}
+completude <- colMeans(!is.na(dados_dengue)) * 100
+print("Completude de cada variável:")
+print(completude)
+``` 
+## 8.	Realize uma operação de imputação de dados usando o pacote MICE.
+
+```{r mice}
+library(mice)
+``` 
+
+```{r completude pt2}
+imputed_data <- mice(dados_dengue)
+imputed_data_complete <- complete(imputed_data)
+descr(imputed_data_complete)
+``` 
+## 9.	Crie um dashboard Shiny onde seja possível selecionar (tire um print-screen da tela final do sistema):
+
+Script criado a parte no arquivo shiny_app.R.
+## 9.1 Print da tela:
+
+![Dashboard Shiny](dashboard_shiny.png)
+
+a.	uma variável da sua base de dados e um gráfico em linha seja mostrado na tela;
+b.	escolher a cor da linha do gráfico;
+c.	selecionar o limite inferior e superior do eixo X do gráfico;
+d.	selecionar o limite inferior e superior do eixo Y do gráfico.
+
+
+## 10.	Disponibilize os códigos (RMarkdown e Shiny) em uma plataforma de compartilhamento de códigos (sugestão GitHub)
+
+
